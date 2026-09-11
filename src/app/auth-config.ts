@@ -39,7 +39,7 @@ export const apiScope =
  * protectedResourceMap (ver app.config.ts), porque el MsalInterceptor
  * decide a que peticiones les adjunta el token segun esa URL.
  */
-export const apiBaseUrl = 'http://localhost:8080';
+export const apiBaseUrl = 'https://gbvfo72205.execute-api.us-east-1.amazonaws.com';
 
 
 /*
