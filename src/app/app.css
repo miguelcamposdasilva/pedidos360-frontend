@@ -1,0 +1,256 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.barra {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  height: 60px;
+  padding: 0 24px;
+  background: var(--superficie);
+  border-bottom: 1px solid var(--borde);
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--texto);
+  text-decoration: none;
+}
+
+.marca__icono {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  background: var(--marca);
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.marca__nombre {
+  font-size: 15.5px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+}
+
+.navegacion {
+  display: flex;
+  gap: 4px;
+  margin-right: auto;
+}
+
+.navegacion a {
+  padding: 7px 13px;
+  border-radius: var(--radio-sm);
+  color: var(--texto-medio);
+  font-size: 14px;
+  font-weight: 550;
+  text-decoration: none;
+}
+
+.navegacion a:hover {
+  background: var(--superficie-tenue);
+  color: var(--texto);
+}
+
+.navegacion a.activo {
+  background: var(--marca-suave);
+  color: var(--marca-oscura);
+}
+
+.acciones-barra {
+  margin-left: auto;
+}
+
+/* --- Menu de usuario -------------------------------------------------- */
+
+.menu-usuario {
+  position: relative;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  background: var(--marca-suave);
+  border-radius: 50%;
+  color: var(--marca-oscura);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.avatar--grande {
+  width: 40px;
+  height: 40px;
+  font-size: 14px;
+}
+
+.disparador-usuario {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 10px 5px 5px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.disparador-usuario:hover,
+.disparador-usuario.abierto {
+  background: var(--superficie-tenue);
+  border-color: var(--borde);
+}
+
+.disparador-usuario__texto {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.25;
+}
+
+.disparador-usuario__nombre {
+  color: var(--texto);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.disparador-usuario__rol {
+  color: var(--texto-tenue);
+  font-size: 11.5px;
+}
+
+.chevron {
+  color: var(--texto-tenue);
+  font-size: 10px;
+}
+
+.panel-usuario {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 45;
+  width: 268px;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-md);
+  box-shadow: var(--sombra-media);
+  overflow: hidden;
+}
+
+.panel-usuario__identidad {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+}
+
+.panel-usuario__nombre {
+  font-weight: 600;
+}
+
+.panel-usuario__correo {
+  color: var(--texto-medio);
+  font-size: 12.5px;
+  word-break: break-all;
+}
+
+.panel-usuario__rol {
+  padding: 0 16px 14px;
+}
+
+.panel-usuario__opciones {
+  border-top: 1px solid var(--borde);
+  padding: 6px;
+}
+
+.opcion {
+  display: block;
+  width: 100%;
+  padding: 9px 10px;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radio-sm);
+  color: var(--texto-medio);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.opcion:hover {
+  background: var(--superficie-tenue);
+  color: var(--texto);
+}
+
+.opcion--peligro {
+  color: var(--peligro);
+}
+
+.opcion--peligro:hover {
+  background: var(--peligro-suave);
+  color: var(--peligro);
+}
+
+.capa-cierre {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+}
+
+/* --- Estructura ------------------------------------------------------- */
+
+.contenido {
+  flex: 1;
+  width: min(100%, 1080px);
+  margin: 0 auto;
+  padding: 28px 24px 40px;
+}
+
+.pie {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--borde);
+  color: var(--texto-tenue);
+  font-size: 12.5px;
+}
+
+.enlace-pie {
+  color: var(--texto-tenue);
+  text-decoration: none;
+}
+
+.enlace-pie:hover {
+  color: var(--texto-medio);
+  text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+  .barra {
+    gap: 14px;
+    padding: 0 14px;
+  }
+
+  .marca__nombre,
+  .disparador-usuario__texto {
+    display: none;
+  }
+}

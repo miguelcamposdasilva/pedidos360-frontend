@@ -42,3 +42,15 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# --- Secretos y credenciales (nunca deben llegar al repositorio) ---
+*.pem
+*.key
+*.p12
+*.pfx
+.env
+.env.*
+!.env.example
+credentials
+aws-credentials*
+**/secrets/
