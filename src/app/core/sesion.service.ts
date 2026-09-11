@@ -21,11 +21,20 @@ export class SesionService {
 
   readonly autenticado = this.claimsService.autenticado;
 
+  /*
+   * Los claims son la fuente preferida, pero si el access token aun no
+   * esta disponible se usa la cuenta de MSAL: el usuario ya inicio
+   * sesion y su nombre debe aparecer igualmente.
+   */
   readonly nombre = computed(() =>
-    this.claimsService.claims()?.nombre ?? '');
+    this.claimsService.claims()?.nombre ??
+    this.claimsService.cuenta()?.name ??
+    'Usuario');
 
   readonly correo = computed(() =>
-    this.claimsService.claims()?.usuario ?? '');
+    this.claimsService.claims()?.usuario ??
+    this.claimsService.cuenta()?.username ??
+    '');
 
   readonly esAdmin = computed(() =>
     this.claimsService.roles().includes(ROL_ADMIN));

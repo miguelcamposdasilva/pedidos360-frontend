@@ -26,13 +26,23 @@ export class ClaimsService {
 
   private readonly claimsInternos = signal<ClaimsDelToken | null>(null);
 
+  private readonly cuentaInterna = signal<AccountInfo | null>(null);
+
   readonly claims = this.claimsInternos.asReadonly();
+
+  readonly cuenta = this.cuentaInterna.asReadonly();
 
   readonly roles = computed(() => this.claimsInternos()?.roles ?? []);
 
   readonly scopes = computed(() => this.claimsInternos()?.scopes ?? []);
 
-  readonly autenticado = computed(() => this.claimsInternos() !== null);
+  /*
+   * Hay sesion cuando MSAL tiene una cuenta activa. NO se condiciona a
+   * haber obtenido el access token de la API: si esa peticion fallara,
+   * la aplicacion mostraria la pantalla de acceso a un usuario que si
+   * inicio sesion, y el login pareceria no funcionar.
+   */
+  readonly autenticado = computed(() => this.cuentaInterna() !== null);
 
 
   /**
@@ -63,19 +73,20 @@ export class ClaimsService {
     } catch (error) {
 
       /*
-       * El token expiro y no se pudo renovar sin intervencion del usuario
-       * (por ejemplo, consentimiento pendiente o MFA). Se pide interaccion.
+       * No se relanza el login desde aqui. Un acquireTokenRedirect
+       * automatico en este punto produce un bucle: volver de Entra
+       * dispara de nuevo esta carga, que vuelve a fallar y a redirigir.
+       *
+       * Cuando la aplicacion necesite el token de verdad, MsalInterceptor
+       * pedira la interaccion al hacer la peticion.
        */
       if (error instanceof InteractionRequiredAuthError) {
-        this.authService.instance.acquireTokenRedirect({
-          account: cuenta,
-          scopes: [apiScope]
-        });
-
-        return null;
+        console.warn(
+          'El access token requiere interaccion del usuario. ' +
+          'Se solicitara al llamar a la API.', error);
+      } else {
+        console.error('No fue posible obtener el access token:', error);
       }
-
-      console.error('No fue posible obtener el access token:', error);
 
       this.claimsInternos.set(null);
 
@@ -86,6 +97,7 @@ export class ClaimsService {
 
   limpiar(): void {
     this.claimsInternos.set(null);
+    this.cuentaInterna.set(null);
   }
 
 
@@ -103,6 +115,8 @@ export class ClaimsService {
     const activa = this.authService.instance.getActiveAccount();
 
     if (activa) {
+      this.cuentaInterna.set(activa);
+
       return activa;
     }
 
@@ -110,9 +124,12 @@ export class ClaimsService {
 
     if (cuentas.length > 0) {
       this.authService.instance.setActiveAccount(cuentas[0]);
+      this.cuentaInterna.set(cuentas[0]);
 
       return cuentas[0];
     }
+
+    this.cuentaInterna.set(null);
 
     return null;
   }
