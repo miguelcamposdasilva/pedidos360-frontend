@@ -67,9 +67,6 @@ npm install
 npm start           # http://localhost:4200
 ```
 
-El backend debe estar corriendo en la URL indicada por `apiBaseUrl`
-(ver más abajo).
-
 ```bash
 npm test            # Vitest
 npm run build       # compilación de producción en dist/
@@ -91,12 +88,17 @@ y *Preserve log* activado, al iniciar sesión se observa:
 Un SPA es un cliente público y no puede custodiar secretos; PKCE reemplaza al
 `client_secret` con un desafío criptográfico de un solo uso.
 
-### Inicialización
+### Inicialización y estado de sesión
 
 `app.config.ts` llama a `instance.initialize()` desde `provideAppInitializer`,
 de modo que MSAL está listo antes de que el guard o el interceptor se ejecuten.
 El componente raíz llama a `handleRedirectObservable()`, que intercambia el
 código de autorización por los tokens al volver del login.
+
+El estado de sesión se deriva de la **cuenta activa de MSAL**, no de haber
+obtenido el access token de la API. La diferencia importa: si esa petición
+falla —por ejemplo con el backend caído— la aplicación seguiría mostrando al
+usuario como autenticado, en lugar de devolverlo a la pantalla de acceso.
 
 ### Guards
 
@@ -214,7 +216,7 @@ Todo en [`src/app/auth-config.ts`](src/app/auth-config.ts):
 | `frontendClientId` | `470a6457-ce66-4860-91f5-ee4e6618e57c` |
 | `apiClientId` | `323d4ae1-4cd7-4f3b-a10d-6cecd530b09d` |
 | `apiScope` | `api://<apiClientId>/access_as_user` |
-| `apiBaseUrl` | `http://localhost:8080` |
+| `apiBaseUrl` | la *Invoke URL* del API Gateway |
 | `ROL_ADMIN` / `ROL_LECTOR` | `Pedidos.Admin` / `Pedidos.Lector` |
 
 Estos identificadores **no son secretos**: viajan en la URL del navegador
@@ -224,22 +226,21 @@ Los valores de `ROL_ADMIN` y `ROL_LECTOR` deben coincidir exactamente con el
 campo *Value* de los App Roles en Entra ID y con las reglas de `SecurityConfig`
 en el backend.
 
-### Apuntar a AWS API Gateway
+### Cambiar de entorno
 
 Una sola línea; el `protectedResourceMap` deriva de la misma constante y se
 actualiza solo:
 
 ```ts
-export const apiBaseUrl =
-  'https://<id>.execute-api.us-east-1.amazonaws.com';
+export const apiBaseUrl = 'https://<id>.execute-api.us-east-1.amazonaws.com';
 ```
 
-> Sin barra final. La clave del mapa se arma como `${apiBaseUrl}/api/*`; una
-> barra de más produce `//api/*`, el patrón deja de coincidir, el interceptor
-> no adjunta el token y todo responde `401` sin motivo aparente.
+> **Sin barra final.** La clave del mapa se arma como `${apiBaseUrl}/api/*`;
+> una barra de más produce `//api/*`, el patrón deja de coincidir, el
+> interceptor no adjunta el token y todo responde `401` sin motivo aparente.
 
 El origen del frontend debe estar declarado en la configuración CORS del API
-Gateway.
+Gateway, y el `Authorization` entre las cabeceras permitidas.
 
 ### Requisitos en Entra ID
 
@@ -265,6 +266,24 @@ mensajes de usuario.
 
 ---
 
+## Resultados verificados
+
+Recorrido completo contra la infraestructura desplegada en AWS:
+
+| Escenario | Resultado | Quién decide |
+|---|---|---|
+| Login con Microsoft | token con `iss` v2.0, `aud` de la API y `roles` | Entra ID |
+| Panel y listado con `Pedidos.Admin` | `200`, datos desde RDS | el microservicio |
+| Crear pedido con `Pedidos.Admin` | `201` y fila persistida en RDS | el microservicio |
+| Crear pedido con `Pedidos.Lector` | `403`, aviso «no tienes permisos» | Spring Security |
+| Cuenta sin ningún rol | redirección a `/sin-acceso` | guard de rol |
+| Petición sin token | `401` | API Gateway |
+
+El `403` nace en Spring y el `401` en el gateway: el authorizer valida
+identidad, pero no conoce los roles de la aplicación.
+
+---
+
 ## Estado
 
 | Requisito | Estado |
@@ -275,5 +294,9 @@ mensajes de usuario.
 | Rutas protegidas con guards | ✅ |
 | `MsalInterceptor` adjunta el JWT | ✅ |
 | Lectura de roles y scopes de los claims | ✅ |
-| Consumo a través de AWS API Gateway | pendiente de la URL del gateway |
-| Despliegue del SPA en la nube | no realizado — corre en local contra la infraestructura cloud |
+| Consumo a través de AWS API Gateway | ✅ |
+| Despliegue del SPA en la nube | no realizado |
+
+El SPA se ejecuta en el entorno de desarrollo y consume la infraestructura
+cloud real: API Gateway, EC2 y RDS. Publicarlo requeriría HTTPS mediante
+S3 + CloudFront, ya que Entra ID solo acepta `http` para `localhost`.
